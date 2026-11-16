@@ -5,7 +5,7 @@ engine running in a Web Worker and a second, deeper alpha-beta engine for the
 endgame. No dependencies, no build step, no server: it is plain static files that
 GitHub Pages can serve as-is.
 
-**[Play it](https://changan-lu.github.io/Reversi/)** — or `npm start` for a local copy.
+**[Play it](https://changanlu.github.io/Reversi/)** — or `npm start` for a local copy.
 
 | | |
 |---|---|
