@@ -37,12 +37,9 @@
   width: 100%;
   aspect-ratio: 1;
   border-radius: var(--board-radius);
-  background:
-    repeating-linear-gradient(
-      45deg,
-      var(--board-a) 0 12px,
-      var(--board-b) 12px 24px
-    );
+  /* A 4x4 checkerboard of 2x2-cell tiles renders as a subtle 8x8 pattern. */
+  background-image: repeating-conic-gradient(var(--board-a) 0% 25%, var(--board-b) 0% 50%);
+  background-size: 25% 25%;
   box-shadow: var(--board-shadow);
   overflow: hidden;
   touch-action: manipulation;
@@ -57,9 +54,13 @@
   position: relative;
   display: grid;
   place-items: center;
+  padding: 0;
   border: 1px solid var(--board-line);
   margin: -0.5px;
   background: transparent;
+  color: inherit;
+  font: inherit;
+  appearance: none;
   cursor: default;
 }
 
@@ -80,13 +81,13 @@
 }
 
 /* Star points, like a Go board — purely decorative. */
-.cell[data-star]::before {
-  content: '';
+.cell .star {
   position: absolute;
   width: 5px;
   height: 5px;
   border-radius: 50%;
   background: var(--board-star);
+  pointer-events: none;
 }
 
 .cell.is-playable {
@@ -94,7 +95,7 @@
 }
 
 .cell.is-playable:hover {
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .cell:focus-visible {
@@ -121,7 +122,7 @@
 
 .cell.is-legal.is-playable:hover::after {
   transform: scale(1.35);
-  opacity: 0.8;
+  opacity: 0.85;
 }
 
 /* Hover preview: a ghost disc of the colour about to be played. */
@@ -131,27 +132,9 @@
   width: 82%;
   height: 82%;
   border-radius: 50%;
-  opacity: 0.16;
+  opacity: 0.18;
   background: var(--preview-color, transparent);
-}
-
-.cell[data-star].is-playable:hover::before {
-  content: '';
-  position: absolute;
-  width: 82%;
-  height: 82%;
-  border-radius: 50%;
-  opacity: 0.16;
-  background: var(--preview-color, transparent);
-}
-
-.cell[data-star].is-playable::before {
-  content: '';
-  position: absolute;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--board-star);
+  pointer-events: none;
 }
 
 /* Last move ring. */
@@ -202,6 +185,8 @@
 
 /* --------------------------------------------------------------------------
    Discs — a two-faced card that flips in 3D.
+   Each face is an independent element, so a flip is one CSS transition and the
+   colour of the *hidden* face can be updated without any flash.
    -------------------------------------------------------------------------- */
 
 .disc {
@@ -211,18 +196,7 @@
   border-radius: 50%;
   transform-style: preserve-3d;
   transition: transform 320ms var(--ease-out);
-  box-shadow: var(--disc-shadow);
   will-change: transform;
-}
-
-.disc[data-color='black'] {
-  --face-a: radial-gradient(circle at 34% 26%, var(--disc-black-a) 0%, var(--disc-black-b) 78%);
-  --face-a-edge: var(--disc-black-edge);
-}
-
-.disc[data-color='white'] {
-  --face-a: radial-gradient(circle at 34% 26%, var(--disc-white-a) 0%, var(--disc-white-b) 78%);
-  --face-a-edge: var(--disc-white-edge);
 }
 
 .disc .face {
@@ -230,17 +204,20 @@
   inset: 0;
   border-radius: 50%;
   backface-visibility: hidden;
-  box-shadow: 0 0 0 1px var(--face-edge, var(--disc-black-edge)) inset;
+  box-shadow: var(--disc-shadow);
 }
 
-.disc .face-a {
-  background: var(--face-a);
-  --face-edge: var(--face-a-edge);
+.disc .face.is-black {
+  background: radial-gradient(circle at 34% 26%, var(--disc-black-a) 0%, var(--disc-black-b) 78%);
+  box-shadow: 0 0 0 1px var(--disc-black-edge) inset, var(--disc-shadow);
+}
+
+.disc .face.is-white {
+  background: radial-gradient(circle at 34% 26%, var(--disc-white-a) 0%, var(--disc-white-b) 78%);
+  box-shadow: 0 0 0 1px var(--disc-white-edge) inset, var(--disc-shadow);
 }
 
 .disc .face-b {
-  background: var(--face-b);
-  --face-edge: var(--face-b-edge);
   transform: rotateY(180deg);
 }
 
@@ -325,10 +302,11 @@
   font-size: 1rem;
   font-weight: 600;
   letter-spacing: -0.01em;
+  color: var(--on-bg);
 }
 
 .status-line[data-tone='win'] {
-  color: var(--accent);
+  color: var(--on-bg-accent);
 }
 
 .status-line[data-tone='lose'] {
@@ -338,7 +316,7 @@
 .status-hint {
   margin: 0;
   font-size: 0.82rem;
-  color: var(--text-dim);
+  color: var(--on-bg-dim);
 }
 
 @media (max-width: 560px) {

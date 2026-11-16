@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Reversi — browser test harness</title>
+  <style>
+    body { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin: 24px; background: #10131a; color: #e8eef6; }
+    h1 { font-size: 1rem; letter-spacing: 0.08em; text-transform: uppercase; color: #9db0c6; }
+    pre { font-size: 12px; line-height: 1.55; white-space: pre-wrap; }
+    .pass { color: #45d6b0; }
+    .fail { color: #ff8465; }
+    #board-host { width: 320px; }
+    #board-host .board { display: grid; grid-template-columns: repeat(8, 1fr); aspect-ratio: 1; }
+    #board-host .cell { position: relative; border: 1px solid #333; }
+    #board-host .disc { position: absolute; inset: 10%; border-radius: 50%; }
+    #board-host .disc .face.is-black { background: #111; }
+    #board-host .disc .face.is-white { background: #eee; }
+    #board-host .disc .face { position: absolute; inset: 0; border-radius: 50%; }
+  </style>
+</head>
+<body>
+  <h1>Browser test harness</h1>
+  <div id="board-host"></div>
+  <pre id="results">running…</pre>
+  <script type="module">
+    /**
+     * In-page end-to-end checks.
+     *
+     * Everything here runs in a real browser: real DOM, real Web Worker, real
+     * module loading. tools/browser-check.mjs loads this page headlessly and
+     * reads the results back, which catches integration mistakes that the Node
+     * unit tests cannot (bad import paths, worker protocol errors, DOM wiring).
+     */
+    import { BLACK, WHITE, countDiscs, initialBoard, legalMoves, toNotation } from '../js/game/rules.js';
+    import { GameState } from '../js/game/game-state.js';
+    import { BoardView } from '../js/ui/board-view.js';
+    import { AiClient } from '../js/ai/client.js';
+    import { MctsEngine } from '../js/ai/mcts.js';
+    import { AlphaBetaEngine } from '../js/ai/alphabeta.js';
+    import { encodePosition, POS_SIZE } from '../js/ai/bitboard.js';
+    import * as storage from '../js/util/storage.js';
+
+    const output = [];
+    let passed = 0;
+    let failed = 0;
+
+    function check(name, condition, detail = '') {
+      if (condition) {
+        passed++;
+        output.push(`PASS ${name}`);
+      } else {
+        failed++;
+        output.push(`FAIL ${name}${detail ? ` — ${detail}` : ''}`);
+      }
+    }
+
+    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+    /* ------------------------------------------------------------- */
+    /* Rules and game state                                          */
+    /* ------------------------------------------------------------- */
+    try {
+      const board = initialBoard();
+      check('opening has two discs each', countDiscs(board).black === 2 && countDiscs(board).white === 2);
+      check('opening offers four moves', legalMoves(board, BLACK).length === 4);
+
+      const game = new GameState();
+      const move = game.legalMoves()[0];
+      const result = game.play(move);
+      check('a move is accepted', result.status === 'ok');
+      check('the first move flips one disc', result.flipped.length === 1, `flipped ${result.flipped.length}`);
+      check('the turn passes to white', game.turn === WHITE);
+      check('an occupied square is rejected', game.play(move).status === 'illegal');
+
+      game.undo();
+      check('undo restores the opening', game.history.length === 0 && game.turn === BLACK);
+    } catch (error) {
+      check('rules smoke test', false, String(error));
+    }
+
+    /* ------------------------------------------------------------- */
+    /* Board view                                                    */
+    /* ------------------------------------------------------------- */
+    try {
+      const host = document.getElementById('board-host');
+      const board = document.createElement('div');
+      board.className = 'board';
+      const shell = document.createElement('div');
+      shell.className = 'board-shell';
+      shell.appendChild(board);
+      host.appendChild(shell);
+
+      const view = new BoardView(board, {});
+      view.setCoordinatesVisible(false);
+      const game = new GameState();
+      view.render(game.board, { legal: game.legalMoves(), interactive: true });
+      check('board renders 64 cells', view.cells.length === 64);
+      check('board renders four discs', board.querySelectorAll('.disc').length === 4);
+      check('legal hints are marked', board.querySelectorAll('.cell.is-legal').length === 4);
+      check('playable cells are marked', board.querySelectorAll('.cell.is-playable').length === 4);
+
+      const sq = game.legalMoves()[0];
+      const played = game.play(sq);
+      view.render(game.board, { legal: game.legalMoves(), lastMove: sq, interactive: true });
+      check('a played disc appears', board.querySelectorAll('.disc').length === 5);
+      check('flipped discs are rotated', board.querySelectorAll('.disc.is-flipped').length === played.flipped.length);
+      check('the last move is marked', board.querySelectorAll('.cell.is-last').length === 1);
+
+      view.resetVisuals();
+      check('reset clears the board', board.querySelectorAll('.disc').length === 0);
+    } catch (error) {
+      check('board view smoke test', false, String(error));
+    }
+
+    /* ------------------------------------------------------------- */
+    /* Engines in the page                                           */
+    /* ------------------------------------------------------------- */
+    try {
+      const root = new Int32Array(POS_SIZE);
+      encodePosition(initialBoard(), BLACK, root);
+      const mcts = new MctsEngine({ seed: 4242 });
+      const mctsResult = await mcts.think(root, { timeMs: 200 });
+      check('MCTS returns a legal move', mctsResult && legalMoves(initialBoard(), BLACK).includes(mctsResult.move));
+      check('MCTS ran many playouts', mctsResult && mctsResult.iterations > 200, `${mctsResult && mctsResult.iterations}`);
+
+      const ab = new AlphaBetaEngine({ tableBits: 14 });
+      const abResult = await ab.think(root, { timeMs: 200 });
+      check('alpha-beta returns a legal move', abResult && legalMoves(initialBoard(), BLACK).includes(abResult.move));
+      check('alpha-beta reached depth 4+', abResult && abResult.depth >= 4, `${abResult && abResult.depth}`);
+    } catch (error) {
+      check('engine smoke test', false, String(error));
+    }
+
+    /* ------------------------------------------------------------- */
+    /* Worker round-trip                                             */
+    /* ------------------------------------------------------------- */
+    try {
+      let ready = false;
+      let progressSeen = 0;
+      const client = new AiClient({
+        onReady: () => {
+          ready = true;
+        },
+        onProgress: () => {
+          progressSeen++;
+        },
+        onError: (error) => output.push(`worker error: ${error.message}`),
+      });
+      client.configure('mcts', 7);
+      await sleep(200);
+      check('the worker starts', ready || client.worker !== null);
+
+      const game = new GameState();
+      const reply = await client.think({
+        board: Array.from(game.board),
+        turn: BLACK,
+        timeMs: 250,
+        path: [],
+      });
+      check('the worker answers with a legal move', legalMoves(game.board, BLACK).includes(reply.move), toNotation(reply.move));
+      check('the worker reports statistics', typeof reply.stats.iterations === 'number' && reply.stats.iterations > 0);
+
+      // Cancellation: a second request supersedes the first.
+      const first = client.think({ board: Array.from(game.board), turn: BLACK, timeMs: 2000, path: [] });
+      const second = client.think({ board: Array.from(game.board), turn: BLACK, timeMs: 200, path: [] });
+      const outcomes = await Promise.allSettled([first, second]);
+      check('a superseded request is rejected', outcomes[0].status === 'rejected');
+      check('the newest request still resolves', outcomes[1].status === 'fulfilled');
+      client.terminate();
+      void progressSeen;
+    } catch (error) {
+      check('worker round-trip', false, String(error));
+    }
+
+    /* ------------------------------------------------------------- */
+    /* Full self-play game through the engines                       */
+    /* ------------------------------------------------------------- */
+    try {
+      const randSeed = 99;
+      const mcts = new MctsEngine({ seed: randSeed });
+      const game = new GameState();
+      const root = new Int32Array(POS_SIZE);
+      let lastIndex = 0;
+      let guard = 0;
+      while (!game.over && guard++ < 100) {
+        encodePosition(game.board, game.turn, root);
+        const result = await mcts.think(root, {
+          timeMs: game.emptyCount() > 40 ? 40 : 80,
+          path: game.moveList().slice(lastIndex),
+        });
+        lastIndex = game.history.length;
+        if (!result) break;
+        const played = game.play(result.move);
+        if (played.status !== 'ok') {
+          check('self-play produces legal moves', false, `illegal ${result.move} at ply ${game.history.length}`);
+          break;
+        }
+      }
+      const counts = game.counts();
+      check('a self-play game finishes', game.over, `${game.history.length} plies, ${counts.black}-${counts.white}`);
+      check('the final position is full or blocked', legalMoves(game.board, BLACK).length === 0);
+      check('disc counts add up', counts.black + counts.white + counts.empty === 64);
+    } catch (error) {
+      check('self-play game', false, String(error));
+    }
+
+    /* ------------------------------------------------------------- */
+    /* Storage                                                       */
+    /* ------------------------------------------------------------- */
+    try {
+      storage.saveSettings({ ...storage.DEFAULT_SETTINGS, theme: 'felt', level: 'expert' });
+      const restored = storage.loadSettings();
+      check('settings round-trip through localStorage', restored.theme === 'felt' && restored.level === 'expert');
+      storage.saveGame({ moves: [20, 29, 34], mode: 'pvp', engine: 'ab', level: 'easy' });
+      const saved = storage.loadGame();
+      check('saved game round-trip', saved && saved.moves.length === 3 && saved.engine === 'ab');
+      storage.clearGame();
+      check('clearing the saved game works', storage.loadGame() === null);
+      storage.saveSettings(storage.DEFAULT_SETTINGS);
+    } catch (error) {
+      check('storage', false, String(error));
+    }
+
+    /* ------------------------------------------------------------- */
+    /* Report                                                        */
+    /* ------------------------------------------------------------- */
+    output.push('');
+    output.push(`RESULT: ${passed} passed, ${failed} failed`);
+    const pre = document.getElementById('results');
+    pre.textContent = output.join('\n');
+    pre.className = failed === 0 ? 'pass' : 'fail';
+    document.title = failed === 0 ? `PASS (${passed})` : `FAIL (${failed})`;
+    // Expose for the headless runner, which dumps the DOM.
+    window.__reversiTestResult = { passed, failed, output };
+    console.log(pre.textContent);
+  </script>
+</body>
+</html>

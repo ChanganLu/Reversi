@@ -21,6 +21,10 @@
   --text: #26221c;
   --text-dim: #6f6656;
   --text-faint: #9a9182;
+  /* Text that sits directly on the page background rather than on a card. */
+  --on-bg: #26221c;
+  --on-bg-dim: #6f6656;
+  --on-bg-accent: #2f6f5e;
   --accent: #2f6f5e;
   --accent-soft: #e3efe9;
   --accent-contrast: #ffffff;
@@ -67,6 +71,9 @@
   --text: #e8eef6;
   --text-dim: #9db0c6;
   --text-faint: #6f8199;
+  --on-bg: #e8eef6;
+  --on-bg-dim: #9db0c6;
+  --on-bg-accent: #45d6b0;
   --accent: #45d6b0;
   --accent-soft: rgba(69, 214, 176, 0.14);
   --accent-contrast: #06231c;
@@ -111,6 +118,10 @@
   --text: #2a2418;
   --text-dim: #6b5f48;
   --text-faint: #8d8064;
+  /* The page background is dark green here, so text sits on cream instead. */
+  --on-bg: #f6f1e3;
+  --on-bg-dim: #c2b9a1;
+  --on-bg-accent: #ffd98a;
   --accent: #7a4a1f;
   --accent-soft: rgba(122, 74, 31, 0.14);
   --accent-contrast: #fdf6e7;

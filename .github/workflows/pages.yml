@@ -1,0 +1,57 @@
+# Publishes the repository to GitHub Pages.
+#
+# The game is plain static files: no build step and no runtime dependencies.
+# Enabling this workflow is all a fork needs to get a live copy.
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dev dependencies
+        run: npm install --no-audit --no-fund
+      - name: Unit tests
+        run: npm run test:logic
+      - name: DOM integration test
+        run: node tests/dom.test.mjs
+
+  deploy:
+    name: Deploy
+    needs: test
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - name: Stage the static site
+        run: |
+          mkdir -p _site
+          cp -r index.html assets css js _site/
+          find _site -type f | sort
+      - name: Upload the site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4

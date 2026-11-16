@@ -1,0 +1,17 @@
+# Dependencies (only needed for the DOM test suite)
+node_modules/
+.npm-cache/
+
+# Tool output
+tools/shots/
+tools/*.txt
+tools/dom*.html
+tools/dom*.err
+tests/shots/
+
+# Editor / OS noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp

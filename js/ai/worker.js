@@ -25,6 +25,7 @@
 import { POS_SIZE, encodePosition } from './bitboard.js';
 import { AlphaBetaEngine } from './alphabeta.js';
 import { MctsEngine } from './mcts.js';
+import { SQUARE_COUNT, generateMoves } from '../game/rules.js';
 
 /** Scratch buffers reused across requests. */
 const boardBuffer = new Uint8Array(64);
@@ -149,34 +150,10 @@ async function handleThink(request) {
 
 /** Lists the legal moves of a plain board, used only by the random-move path. */
 function legalMovesOf(board, turn) {
-  // Imported lazily to keep the hot path free of extra module lookups.
-  const moves = [];
-  for (let sq = 0; sq < 64; sq++) {
-    if (board[sq] !== 0) continue;
-    if (isLegalPlain(board, sq, turn)) moves.push(sq);
-  }
-  return moves;
-}
-
-function isLegalPlain(board, sq, turn) {
-  const opponent = turn ^ 3;
-  for (let dRow = -1; dRow <= 1; dRow++) {
-    for (let dCol = -1; dCol <= 1; dCol++) {
-      if (dRow === 0 && dCol === 0) continue;
-      let row = (sq >> 3) + dRow;
-      let col = (sq & 7) + dCol;
-      let seen = 0;
-      while (row >= 0 && row < 8 && col >= 0 && col < 8 && board[row * 8 + col] === opponent) {
-        row += dRow;
-        col += dCol;
-        seen++;
-      }
-      if (seen > 0 && row >= 0 && row < 8 && col >= 0 && col < 8 && board[row * 8 + col] === turn) {
-        return true;
-      }
-    }
-  }
-  return false;
+  boardBuffer.set(board);
+  const list = new Uint8Array(SQUARE_COUNT);
+  const count = generateMoves(boardBuffer, turn, list);
+  return Array.from(list.subarray(0, count));
 }
 
 /** Keeps structured-clone payloads small: only the fields the UI displays. */

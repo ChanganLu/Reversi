@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Reversi">
+  <rect width="64" height="64" rx="14" fill="#efe9dc"/>
+  <rect x="6" y="6" width="52" height="52" rx="8" fill="#25653f"/>
+  <circle cx="24" cy="24" r="11" fill="url(#b)"/>
+  <circle cx="40" cy="40" r="11" fill="url(#w)"/>
+  <defs>
+    <radialGradient id="b" cx="0.34" cy="0.26" r="0.85">
+      <stop offset="0" stop-color="#3b3630"/>
+      <stop offset="1" stop-color="#050403"/>
+    </radialGradient>
+    <radialGradient id="w" cx="0.34" cy="0.26" r="0.85">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#ddd0b6"/>
+    </radialGradient>
+  </defs>
+</svg>
