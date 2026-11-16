@@ -31,6 +31,8 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Unit tests
         run: npm run test:logic
+      - name: Wiring audit (ids, classes, imports, assets)
+        run: npm run audit
       - name: DOM integration test
         run: node tests/dom.test.mjs
 

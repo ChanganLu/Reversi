@@ -22,8 +22,9 @@
   "scripts": {
     "start": "node tools/serve.mjs 8080",
     "serve": "node tools/serve.mjs 8080",
-    "test": "node tests/rules.test.mjs && node tests/bitboard.test.mjs && node tests/evaluate.test.mjs && node tests/alphabeta.test.mjs && node tests/mcts.test.mjs && node tests/dom.test.mjs",
+    "test": "npm run test:logic && node tests/dom.test.mjs",
     "test:logic": "node tests/rules.test.mjs && node tests/bitboard.test.mjs && node tests/evaluate.test.mjs && node tests/alphabeta.test.mjs && node tests/mcts.test.mjs",
+    "audit": "node tools/audit.mjs",
     "bench": "node tools/bench.mjs",
     "arena": "node tools/arena.mjs",
     "check": "node tools/browser-check.mjs"

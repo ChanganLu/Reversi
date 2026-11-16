@@ -211,6 +211,7 @@ tools/
   serve.mjs             tiny static server
   bench.mjs             micro-benchmarks for the hot paths
   arena.mjs             self-play matches between engine configurations
+  audit.mjs             static checks: ids, classes, CSS variables, imports, assets
   browser-check.mjs     headless-browser run of tests/browser.html + screenshots
   diag-mcts.mjs         engine-vs-random diagnostics
 ```
@@ -222,6 +223,7 @@ tools/
 ```bash
 npm run test:logic     # rules, bitboards, evaluation, both engines (no dependencies)
 npm test               # the above + the DOM integration test (needs jsdom)
+npm run audit          # ids, classes, CSS variables, imports and assets all resolve
 npm run bench          # micro-benchmarks
 npm run arena -- --games 8 --a mcts:1000 --b ab:1000   # self-play match
 npm run check          # headless browser: in-page suite + screenshots
@@ -243,6 +245,12 @@ drives the real controller (worker included, with the engine stubbed onto the No
 event loop). It covers: boot, playing a move, the engine's reply, undo, hint,
 illegal clicks, computer-versus-computer, theme persistence, new game, settings
 changes and game saving.
+
+`tools/audit.mjs` covers what neither suite can see: that every
+`getElementById`/selector in the JavaScript has a matching element, that every
+class the code applies is defined in the CSS, that every `var(--token)` is set by a
+theme, and that every import and asset path resolves — the mistakes that would
+otherwise only show up as an invisible or broken control.
 
 ---
 
