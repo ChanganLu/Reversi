@@ -248,8 +248,10 @@ changes and game saving.
 
 ## Notes on the original implementation
 
-`old-version/` held a C++ / EasyX implementation of the same game. Its behaviour
-and bugs informed this rewrite; some of the problems found while reading it:
+This project started as a C++ / EasyX rewrite request for an older implementation
+of the same game. That code is preserved in the first commit of the repository
+(`git show 5d7aa1a`) but is no longer in the working tree. Its bugs informed this
+rewrite; some of the problems found while reading it:
 
 1. **Evaluation scores stored in `char`.** `prime_score` holds `char` weights and
    `gettag()` returns `char` while summing terms that reach 5 and products that

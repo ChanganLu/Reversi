@@ -63,6 +63,8 @@ class App {
     /** Index into the move list at the time of the last search (tree reuse). */
     this.lastSearchIndex = 0;
     this.aiAvailable = true;
+    /** Set when the engine could not start; keeps the error visible. */
+    this.engineError = null;
 
     this.ai = new AiClient({
       onReady: () => {
@@ -441,6 +443,10 @@ class App {
 
   /** @param {{black:string, white:string}} roles */
   updateStatus(roles) {
+    if (this.engineError) {
+      this.panel.setStatus('Engine unavailable', this.engineError, 'lose');
+      return;
+    }
     if (this.game.over) {
       this.panel.setStatus(...this.resultText());
       return;
@@ -562,7 +568,10 @@ class App {
     const message = error && error.message ? error.message : String(error);
     if (message === 'cancelled') return;
     this.aiAvailable = false;
-    this.panel.setStatus('Engine error', `${message} Reload the page to try again.`, 'lose');
+    // Kept so the status line survives later refreshes instead of being
+    // overwritten by "White to move".
+    this.engineError = `${message} Reload the page to try again.`;
+    this.panel.setStatus('Engine error', this.engineError, 'lose');
     this.updateFooter();
     this.refreshUi({ keepStatus: true });
   }
