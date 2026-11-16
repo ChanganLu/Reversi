@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="paper">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Reversi — Othello with a Monte-Carlo engine</title>
+  <meta name="description" content="Play Reversi (Othello) in the browser against a Monte-Carlo tree search engine running in a Web Worker, or against a deep alpha-beta searcher. Three themes, no dependencies, no build step.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/themes.css">
+  <link rel="stylesheet" href="css/board.css">
+  <link rel="stylesheet" href="css/panel.css">
+  <link rel="stylesheet" href="css/dialogs.css">
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i></span>
+        <div class="brand-text">
+          <h1>Reversi</h1>
+          <p class="brand-sub">Monte-Carlo tree search, in your browser</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div class="segmented" id="theme-switch" role="group" aria-label="Colour theme">
+          <button type="button" data-theme-value="paper" class="is-active" aria-pressed="true">Paper</button>
+          <button type="button" data-theme-value="midnight" aria-pressed="false">Midnight</button>
+          <button type="button" data-theme-value="felt" aria-pressed="false">Felt</button>
+        </div>
+        <button type="button" class="icon-button" id="btn-settings" aria-haspopup="dialog">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/>
+            <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.6 8a1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V2a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V8a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/>
+          </svg>
+          <span class="visually-hidden">Settings</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <section class="board-area" aria-label="Board">
+        <div class="board-wrap">
+          <div class="board-shell">
+            <div class="board" id="board" role="grid" aria-label="Reversi board, 8 by 8"></div>
+          </div>
+        </div>
+        <div class="board-status">
+          <p class="status-line" id="status-line" role="status" aria-live="polite">Black to move</p>
+          <p class="status-hint" id="status-hint">You play black. Click a highlighted square.</p>
+        </div>
+      </section>
+
+      <aside class="panel" aria-label="Game information">
+        <section class="card scoreboard">
+          <div class="score-row" id="score-black">
+            <span class="disc-chip disc-chip--black" aria-hidden="true"></span>
+            <span class="score-name">Black</span>
+            <span class="score-role" data-role>You</span>
+            <span class="score-value" data-count>2</span>
+          </div>
+          <div class="score-bar" aria-hidden="true">
+            <div class="score-bar-fill" data-bar></div>
+          </div>
+          <div class="score-row" id="score-white">
+            <span class="disc-chip disc-chip--white" aria-hidden="true"></span>
+            <span class="score-name">White</span>
+            <span class="score-role" data-role>Computer</span>
+            <span class="score-value" data-count>2</span>
+          </div>
+        </section>
+
+        <section class="card engine-card" id="engine-card">
+          <header class="card-header">
+            <h2>Engine</h2>
+            <span class="badge" id="engine-badge">Monte-Carlo</span>
+          </header>
+          <div class="thinking" id="thinking" hidden>
+            <span class="spinner" aria-hidden="true"></span>
+            <span id="thinking-label">Thinking…</span>
+          </div>
+          <dl class="stats" id="engine-stats">
+            <div><dt id="stat-a-label">Playouts</dt><dd id="stat-a">—</dd></div>
+            <div><dt id="stat-b-label">Nodes</dt><dd id="stat-b">—</dd></div>
+            <div><dt id="stat-c-label">Time</dt><dd id="stat-c">—</dd></div>
+          </dl>
+          <div class="chance">
+            <div class="chance-head">
+              <span id="chance-label">Estimated win chance</span>
+              <span class="chance-value" id="chance-value">—</span>
+            </div>
+            <div class="chance-track" aria-hidden="true"><div class="chance-fill" id="chance-fill"></div></div>
+          </div>
+          <p class="pv" id="pv-line" hidden></p>
+        </section>
+
+        <section class="card moves-card">
+          <header class="card-header">
+            <h2>Moves</h2>
+            <span class="badge badge--quiet" id="move-count">0</span>
+          </header>
+          <ol class="move-list" id="move-list" aria-label="Move history"></ol>
+        </section>
+
+        <section class="card actions-card">
+          <div class="action-grid">
+            <button type="button" class="button" id="btn-new">New game</button>
+            <button type="button" class="button" id="btn-undo">Undo</button>
+            <button type="button" class="button" id="btn-hint">Hint</button>
+            <button type="button" class="button button--ghost" id="btn-ai-move">Let AI move</button>
+          </div>
+        </section>
+      </aside>
+    </main>
+
+    <footer class="app-footer">
+      <p>
+        Keyboard: <kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> move ·
+        <kbd>Enter</kbd> place · <kbd>H</kbd> hint · <kbd>U</kbd> undo · <kbd>N</kbd> new game
+      </p>
+      <p class="footer-meta" id="footer-meta"></p>
+    </footer>
+  </div>
+
+  <dialog class="dialog" id="settings-dialog" aria-labelledby="settings-title">
+    <form method="dialog" class="dialog-body" id="settings-form">
+      <header class="dialog-header">
+        <h2 id="settings-title">Game settings</h2>
+        <button type="submit" class="icon-button icon-button--plain" value="close" aria-label="Close settings">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </header>
+
+      <div class="field">
+        <span class="field-label">Opponent</span>
+        <div class="radio-cards" role="radiogroup" aria-label="Opponent">
+          <label class="radio-card">
+            <input type="radio" name="mode" value="pvc-black">
+            <span class="radio-card-body">
+              <strong>Play black</strong>
+              <small>You move first</small>
+            </span>
+          </label>
+          <label class="radio-card">
+            <input type="radio" name="mode" value="pvc-white">
+            <span class="radio-card-body">
+              <strong>Play white</strong>
+              <small>Computer moves first</small>
+            </span>
+          </label>
+          <label class="radio-card">
+            <input type="radio" name="mode" value="pvp">
+            <span class="radio-card-body">
+              <strong>Two players</strong>
+              <small>Same screen</small>
+            </span>
+          </label>
+          <label class="radio-card">
+            <input type="radio" name="mode" value="cvc">
+            <span class="radio-card-body">
+              <strong>Watch</strong>
+              <small>Computer vs computer</small>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="engine-select">Search engine</label>
+        <select class="select" id="engine-select" name="engine">
+          <option value="mcts">Monte-Carlo tree search</option>
+          <option value="ab">Deep search (alpha-beta)</option>
+        </select>
+        <p class="field-note" id="engine-note">
+          Monte-Carlo explores thousands of playouts at once. Deep search is stronger in the
+          endgame because it can solve it exactly.
+        </p>
+      </div>
+
+      <div class="field">
+        <span class="field-label">Strength</span>
+        <div class="pill-group" role="radiogroup" aria-label="Strength" id="strength-group">
+          <label><input type="radio" name="level" value="easy"><span>Easy</span></label>
+          <label><input type="radio" name="level" value="medium"><span>Medium</span></label>
+          <label><input type="radio" name="level" value="hard"><span>Hard</span></label>
+          <label><input type="radio" name="level" value="expert"><span>Expert</span></label>
+        </div>
+      </div>
+
+      <div class="field field--row">
+        <label class="switch">
+          <input type="checkbox" id="opt-legal" name="showLegal">
+          <span class="switch-track" aria-hidden="true"></span>
+          <span class="switch-label">Highlight legal moves</span>
+        </label>
+      </div>
+      <div class="field field--row">
+        <label class="switch">
+          <input type="checkbox" id="opt-coords" name="showCoords">
+          <span class="switch-track" aria-hidden="true"></span>
+          <span class="switch-label">Show board coordinates</span>
+        </label>
+      </div>
+      <div class="field field--row">
+        <label class="switch">
+          <input type="checkbox" id="opt-motion" name="animations">
+          <span class="switch-track" aria-hidden="true"></span>
+          <span class="switch-label">Animate discs</span>
+        </label>
+      </div>
+
+      <footer class="dialog-footer">
+        <button type="button" class="button button--ghost" id="btn-resume">Resume saved game</button>
+        <span class="dialog-spacer"></span>
+        <button type="submit" class="button" value="cancel">Cancel</button>
+        <button type="button" class="button button--primary" id="btn-apply">Apply &amp; restart</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <noscript>
+    <p class="noscript">This game needs JavaScript. It runs entirely in your browser — no server, no tracking.</p>
+  </noscript>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

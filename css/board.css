@@ -1,0 +1,364 @@
+/* ==========================================================================
+   board.css — the 8x8 board, discs, hints and the flip animation.
+   ========================================================================== */
+
+.board-area {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.board-wrap {
+  display: flex;
+  justify-content: center;
+}
+
+.board-shell {
+  position: relative;
+  width: min(100%, 620px);
+  padding: 10px;
+  border-radius: calc(var(--board-radius) + 10px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Coordinate gutters appear only when enabled. */
+.board-shell[data-coords='true'] {
+  padding: 10px 30px 30px 30px;
+}
+
+.board {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--board-radius);
+  background:
+    repeating-linear-gradient(
+      45deg,
+      var(--board-a) 0 12px,
+      var(--board-b) 12px 24px
+    );
+  box-shadow: var(--board-shadow);
+  overflow: hidden;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+/* --------------------------------------------------------------------------
+   Cells
+   -------------------------------------------------------------------------- */
+
+.cell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--board-line);
+  margin: -0.5px;
+  background: transparent;
+  cursor: default;
+}
+
+.cell:nth-child(8n + 1) {
+  border-left-color: transparent;
+}
+
+.cell:nth-child(-n + 8) {
+  border-top-color: transparent;
+}
+
+.cell:nth-child(8n) {
+  border-right-color: transparent;
+}
+
+.cell:nth-child(n + 57) {
+  border-bottom-color: transparent;
+}
+
+/* Star points, like a Go board — purely decorative. */
+.cell[data-star]::before {
+  content: '';
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--board-star);
+}
+
+.cell.is-playable {
+  cursor: pointer;
+}
+
+.cell.is-playable:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.cell:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -3px;
+  z-index: 3;
+}
+
+/* Legal-move hint dot. */
+.cell.is-legal::after {
+  content: '';
+  position: absolute;
+  width: 26%;
+  height: 26%;
+  border-radius: 50%;
+  background: var(--hint);
+  opacity: 0.55;
+  transition: transform 180ms var(--ease-out), opacity 180ms var(--ease-out);
+}
+
+.board[data-show-legal='false'] .cell.is-legal::after {
+  display: none;
+}
+
+.cell.is-legal.is-playable:hover::after {
+  transform: scale(1.35);
+  opacity: 0.8;
+}
+
+/* Hover preview: a ghost disc of the colour about to be played. */
+.cell.is-playable:hover::before {
+  content: '';
+  position: absolute;
+  width: 82%;
+  height: 82%;
+  border-radius: 50%;
+  opacity: 0.16;
+  background: var(--preview-color, transparent);
+}
+
+.cell[data-star].is-playable:hover::before {
+  content: '';
+  position: absolute;
+  width: 82%;
+  height: 82%;
+  border-radius: 50%;
+  opacity: 0.16;
+  background: var(--preview-color, transparent);
+}
+
+.cell[data-star].is-playable::before {
+  content: '';
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--board-star);
+}
+
+/* Last move ring. */
+.cell.is-last .move-marker {
+  position: absolute;
+  width: 30%;
+  height: 30%;
+  border-radius: 50%;
+  background: var(--last-move);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.45);
+  pointer-events: none;
+  animation: marker-pop 260ms var(--ease-spring);
+}
+
+/* Engine suggestion ring. */
+.cell.is-suggested::after {
+  content: '';
+  position: absolute;
+  inset: 12%;
+  border-radius: 50%;
+  border: 2.5px dashed var(--suggest);
+  opacity: 0.9;
+  animation: suggest-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes marker-pop {
+  from {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes suggest-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.94);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Discs — a two-faced card that flips in 3D.
+   -------------------------------------------------------------------------- */
+
+.disc {
+  position: absolute;
+  width: 84%;
+  height: 84%;
+  border-radius: 50%;
+  transform-style: preserve-3d;
+  transition: transform 320ms var(--ease-out);
+  box-shadow: var(--disc-shadow);
+  will-change: transform;
+}
+
+.disc[data-color='black'] {
+  --face-a: radial-gradient(circle at 34% 26%, var(--disc-black-a) 0%, var(--disc-black-b) 78%);
+  --face-a-edge: var(--disc-black-edge);
+}
+
+.disc[data-color='white'] {
+  --face-a: radial-gradient(circle at 34% 26%, var(--disc-white-a) 0%, var(--disc-white-b) 78%);
+  --face-a-edge: var(--disc-white-edge);
+}
+
+.disc .face {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  backface-visibility: hidden;
+  box-shadow: 0 0 0 1px var(--face-edge, var(--disc-black-edge)) inset;
+}
+
+.disc .face-a {
+  background: var(--face-a);
+  --face-edge: var(--face-a-edge);
+}
+
+.disc .face-b {
+  background: var(--face-b);
+  --face-edge: var(--face-b-edge);
+  transform: rotateY(180deg);
+}
+
+.disc.is-flipped {
+  transform: rotateY(180deg);
+}
+
+.disc.is-new {
+  animation: disc-drop 280ms var(--ease-spring);
+}
+
+@keyframes disc-drop {
+  from {
+    transform: scale(0.25);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* When animations are disabled every transition is dropped. */
+.board[data-motion='false'] .disc,
+.board[data-motion='false'] .disc.is-new,
+.board[data-motion='false'] .cell.is-last .move-marker,
+.board[data-motion='false'] .cell.is-suggested::after {
+  transition: none;
+  animation: none;
+}
+
+/* --------------------------------------------------------------------------
+   Coordinates
+   -------------------------------------------------------------------------- */
+
+.board-coords {
+  position: absolute;
+  display: grid;
+  color: var(--text-faint);
+  font-size: 0.66rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+  pointer-events: none;
+}
+
+.board-coords--files {
+  left: 30px;
+  right: 10px;
+  bottom: 8px;
+  grid-template-columns: repeat(8, 1fr);
+  text-align: center;
+}
+
+.board-coords--ranks {
+  top: 10px;
+  bottom: 30px;
+  left: 8px;
+  grid-template-rows: repeat(8, 1fr);
+  align-items: center;
+  text-align: center;
+}
+
+.board-coords span {
+  display: grid;
+  place-items: center;
+}
+
+/* --------------------------------------------------------------------------
+   Status strip under the board
+   -------------------------------------------------------------------------- */
+
+.board-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+  padding: 0 4px;
+}
+
+.status-line {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.status-line[data-tone='win'] {
+  color: var(--accent);
+}
+
+.status-line[data-tone='lose'] {
+  color: var(--danger);
+}
+
+.status-hint {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+}
+
+@media (max-width: 560px) {
+  .board-shell {
+    padding: 6px;
+  }
+
+  .board-shell[data-coords='true'] {
+    padding: 6px 22px 22px 22px;
+  }
+
+  .board-coords--files {
+    left: 22px;
+    right: 6px;
+    bottom: 4px;
+  }
+
+  .board-coords--ranks {
+    top: 6px;
+    bottom: 22px;
+    left: 4px;
+  }
+}

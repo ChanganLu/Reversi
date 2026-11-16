@@ -1,0 +1,140 @@
+/* ==========================================================================
+   themes.css — three complete colour themes.
+   Every theme sets the same custom properties, so the rest of the CSS never
+   mentions a colour. Switch by setting data-theme on <html>.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Paper — default: warm ivory, thin ink lines, quiet.
+   -------------------------------------------------------------------------- */
+:root,
+[data-theme='paper'] {
+  color-scheme: light;
+
+  --bg: #f4f1ea;
+  --bg-glow: radial-gradient(120% 90% at 50% -20%, #fffdf8 0%, #f4f1ea 55%, #e9e4d9 100%);
+  --surface: #fffdf9;
+  --surface-2: #f8f5ee;
+  --surface-sunk: #f1ece2;
+  --border: #e2dbcd;
+  --border-strong: #cfc5b1;
+  --text: #26221c;
+  --text-dim: #6f6656;
+  --text-faint: #9a9182;
+  --accent: #2f6f5e;
+  --accent-soft: #e3efe9;
+  --accent-contrast: #ffffff;
+  --danger: #a8442f;
+  --shadow-lg: 0 24px 60px -30px rgba(58, 48, 32, 0.45), 0 2px 8px -3px rgba(58, 48, 32, 0.18);
+  --shadow-sm: 0 1px 2px rgba(58, 48, 32, 0.12), 0 6px 16px -12px rgba(58, 48, 32, 0.4);
+
+  /* Board */
+  --board-a: #efe9dc;
+  --board-b: #e7e0d1;
+  --board-line: rgba(96, 84, 64, 0.22);
+  --board-star: rgba(96, 84, 64, 0.42);
+  --board-radius: 18px;
+  --board-shadow: 0 30px 70px -40px rgba(58, 48, 32, 0.6), 0 1px 0 #fff inset;
+
+  /* Discs */
+  --disc-black-a: #2b2723;
+  --disc-black-b: #050403;
+  --disc-black-edge: rgba(0, 0, 0, 0.5);
+  --disc-white-a: #ffffff;
+  --disc-white-b: #dbd4c6;
+  --disc-white-edge: rgba(120, 108, 88, 0.4);
+  --disc-shadow: 0 2px 4px rgba(50, 42, 30, 0.32), 0 6px 12px -6px rgba(50, 42, 30, 0.45);
+
+  --hint: #2f6f5e;
+  --hint-soft: rgba(47, 111, 94, 0.16);
+  --last-move: #c2612f;
+  --suggest: #b3722a;
+}
+
+/* --------------------------------------------------------------------------
+   Midnight — dark slate with cool glass.
+   -------------------------------------------------------------------------- */
+[data-theme='midnight'] {
+  color-scheme: dark;
+
+  --bg: #0d1117;
+  --bg-glow: radial-gradient(120% 90% at 50% -20%, #1b2634 0%, #0f151d 55%, #090c11 100%);
+  --surface: rgba(28, 38, 51, 0.72);
+  --surface-2: rgba(36, 48, 63, 0.66);
+  --surface-sunk: rgba(12, 18, 25, 0.7);
+  --border: rgba(122, 156, 194, 0.18);
+  --border-strong: rgba(140, 180, 224, 0.32);
+  --text: #e8eef6;
+  --text-dim: #9db0c6;
+  --text-faint: #6f8199;
+  --accent: #45d6b0;
+  --accent-soft: rgba(69, 214, 176, 0.14);
+  --accent-contrast: #06231c;
+  --danger: #ff8465;
+  --shadow-lg: 0 30px 70px -30px rgba(0, 0, 0, 0.85), 0 1px 0 rgba(255, 255, 255, 0.05) inset;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5), 0 10px 24px -16px rgba(0, 0, 0, 0.9);
+
+  --board-a: #1d2a36;
+  --board-b: #17222c;
+  --board-line: rgba(140, 180, 224, 0.16);
+  --board-star: rgba(160, 200, 240, 0.34);
+  --board-radius: 18px;
+  --board-shadow: 0 40px 90px -50px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(140, 180, 224, 0.12) inset;
+
+  --disc-black-a: #3b4654;
+  --disc-black-b: #0b1116;
+  --disc-black-edge: rgba(190, 214, 240, 0.22);
+  --disc-white-a: #f4f8ff;
+  --disc-white-b: #b8c6d8;
+  --disc-white-edge: rgba(255, 255, 255, 0.35);
+  --disc-shadow: 0 3px 6px rgba(0, 0, 0, 0.6), 0 10px 20px -10px rgba(0, 0, 0, 0.9);
+
+  --hint: #45d6b0;
+  --hint-soft: rgba(69, 214, 176, 0.18);
+  --last-move: #ffb454;
+  --suggest: #ffb454;
+}
+
+/* --------------------------------------------------------------------------
+   Felt — tournament table: green baize, wooden frame, cream discs.
+   -------------------------------------------------------------------------- */
+[data-theme='felt'] {
+  color-scheme: light;
+
+  --bg: #1f2a24;
+  --bg-glow: radial-gradient(120% 90% at 50% -20%, #33443a 0%, #1f2a24 60%, #16201b 100%);
+  --surface: rgba(243, 238, 226, 0.94);
+  --surface-2: rgba(233, 226, 210, 0.92);
+  --surface-sunk: rgba(214, 205, 186, 0.55);
+  --border: rgba(120, 96, 62, 0.28);
+  --border-strong: rgba(120, 96, 62, 0.5);
+  --text: #2a2418;
+  --text-dim: #6b5f48;
+  --text-faint: #8d8064;
+  --accent: #7a4a1f;
+  --accent-soft: rgba(122, 74, 31, 0.14);
+  --accent-contrast: #fdf6e7;
+  --danger: #9a3524;
+  --shadow-lg: 0 34px 80px -36px rgba(0, 0, 0, 0.7), 0 1px 0 rgba(255, 255, 255, 0.5) inset;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.28), 0 8px 20px -14px rgba(0, 0, 0, 0.6);
+
+  --board-a: #25653f;
+  --board-b: #1f5c38;
+  --board-line: rgba(8, 30, 18, 0.45);
+  --board-star: rgba(190, 224, 196, 0.5);
+  --board-radius: 10px;
+  --board-shadow: 0 0 0 12px #6b4a2a, 0 0 0 13px #4a3018, 0 40px 80px -40px rgba(0, 0, 0, 0.9);
+
+  --disc-black-a: #35322c;
+  --disc-black-b: #0d0c0a;
+  --disc-black-edge: rgba(0, 0, 0, 0.6);
+  --disc-white-a: #fffaf0;
+  --disc-white-b: #ddd0b6;
+  --disc-white-edge: rgba(90, 74, 48, 0.45);
+  --disc-shadow: 0 3px 5px rgba(0, 0, 0, 0.5), 0 8px 16px -8px rgba(0, 0, 0, 0.7);
+
+  --hint: #d8f0bd;
+  --hint-soft: rgba(216, 240, 189, 0.28);
+  --last-move: #ffd166;
+  --suggest: #ffd166;
+}

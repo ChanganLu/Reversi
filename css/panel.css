@@ -1,0 +1,305 @@
+/* ==========================================================================
+   panel.css — right-hand information column: score, engine stats, moves.
+   ========================================================================== */
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.card {
+  padding: 14px 16px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(6px);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.card-header h2 {
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+/* --------------------------------------------------------------------------
+   Scoreboard
+   -------------------------------------------------------------------------- */
+
+.scoreboard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.score-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 9px;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+  transition: background-color 200ms var(--ease-out);
+}
+
+.score-row.is-active {
+  background: var(--accent-soft);
+}
+
+.disc-chip {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  box-shadow: var(--disc-shadow);
+}
+
+.disc-chip--black {
+  background: radial-gradient(circle at 34% 28%, var(--disc-black-a), var(--disc-black-b));
+}
+
+.disc-chip--white {
+  background: radial-gradient(circle at 34% 28%, var(--disc-white-a), var(--disc-white-b));
+  box-shadow: 0 0 0 1px var(--disc-white-edge) inset, var(--disc-shadow);
+}
+
+.score-name {
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.score-role {
+  font-size: 0.72rem;
+  color: var(--text-faint);
+  letter-spacing: 0.02em;
+}
+
+.score-value {
+  min-width: 2.2ch;
+  font-size: 1.12rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.score-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--surface-sunk);
+  overflow: hidden;
+}
+
+.score-bar-fill {
+  height: 100%;
+  width: 50%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--disc-black-b), var(--disc-black-a));
+  transition: width 420ms var(--ease-out);
+}
+
+/* --------------------------------------------------------------------------
+   Engine card
+   -------------------------------------------------------------------------- */
+
+.thinking {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 10px;
+  font-size: 0.85rem;
+  color: var(--accent);
+  font-weight: 550;
+}
+
+.spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--accent-soft);
+  border-top-color: var(--accent);
+  animation: spin 720ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0 0 12px;
+}
+
+.stats div {
+  padding: 7px 9px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunk);
+}
+
+.stats dt {
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.stats dd {
+  margin: 2px 0 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chance {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.chance-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--text-faint);
+}
+
+.chance-value {
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.chance-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--surface-sunk);
+  overflow: hidden;
+}
+
+.chance-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent-soft), var(--accent));
+  transition: width 300ms var(--ease-out);
+}
+
+.pv {
+  margin: 10px 0 0;
+  font-size: 0.76rem;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.pv strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* --------------------------------------------------------------------------
+   Move list
+   -------------------------------------------------------------------------- */
+
+.moves-card {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.move-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+  gap: 3px 8px;
+  max-height: 168px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+  font-variant-numeric: tabular-nums;
+  scrollbar-width: thin;
+}
+
+.move-list:empty::after {
+  content: 'No moves yet.';
+  color: var(--text-faint);
+  font-size: 0.8rem;
+}
+
+.move-list li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 5px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+.move-list li .index {
+  min-width: 1.9ch;
+  font-size: 0.7rem;
+  color: var(--text-faint);
+}
+
+.move-list li .ply-black,
+.move-list li .ply-white {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.move-list li .ply-white {
+  color: var(--text-dim);
+}
+
+.move-list li.is-current {
+  background: var(--accent-soft);
+}
+
+/* --------------------------------------------------------------------------
+   Actions
+   -------------------------------------------------------------------------- */
+
+.action-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+@media (max-width: 880px) {
+  .panel {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: stretch;
+  }
+
+  .panel > .card {
+    flex: 1 1 260px;
+  }
+
+  .moves-card {
+    flex-basis: 100%;
+  }
+
+  .stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
